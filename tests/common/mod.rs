@@ -57,7 +57,7 @@ pub fn tear_down() -> Result<()> {
 pub fn assert_results(expected_file_name: &str, actual_file_name: &str, tests_directory: &Path) {
     let source_file_path: PathBuf = [
         tests_directory.display().to_string().as_str(),
-        "test_resources",
+        "resources",
         expected_file_name,
     ]
     .iter()
@@ -112,7 +112,7 @@ fn copy_files(source_file_name: &str, target_file_name: &str) -> Result<()> {
     let text_file_from: PathBuf = [
         current_dir.display().to_string().as_str(),
         "tests",
-        "test_resources",
+        "resources",
         source_file_name,
     ]
     .iter()

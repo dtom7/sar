@@ -32,7 +32,7 @@ fn it_searches_and_replaces_text_from_english_to_english() {
                 tests_directory.as_path(),
             );
             assert_results("expected-31.js", "actual-3.js", tests_directory.as_path());
-            assert_results("expected-1.txt", "actual-1.txt", tests_directory.as_path());
+            assert_results("original-1.txt", "actual-1.txt", tests_directory.as_path());
         }
         Err(error) => eprintln!("{}", error),
     }
@@ -71,7 +71,7 @@ fn it_searches_and_replaces_text_from_spanish_to_malayalam() {
                 tests_directory.as_path(),
             );
             assert_results("expected-32.js", "actual-3.js", tests_directory.as_path());
-            assert_results("expected-1.txt", "actual-1.txt", tests_directory.as_path());
+            assert_results("original-1.txt", "actual-1.txt", tests_directory.as_path());
         }
         Err(error) => eprintln!("{}", error),
     }
@@ -150,6 +150,45 @@ fn it_wont_replace_text_when_search_text_is_not_found() {
             );
             assert_results("original-3.js", "actual-3.js", tests_directory.as_path());
             assert_results("original-1.txt", "actual-1.txt", tests_directory.as_path());
+        }
+        Err(error) => eprintln!("{}", error),
+    }
+    TOTAL_FILES_TO_BE_EDITED.store(0, Ordering::Relaxed);
+    TOTAL_FILES_EDITED_OK.store(0, Ordering::Relaxed);
+    match tear_down() {
+        Ok(()) => println!("tear_down ok"),
+        Err(error) => eprintln!("tear_down error: {}", error),
+    }
+}
+
+#[test]
+fn it_searches_and_replaces_text_from_all_files_when_file_extensions_are_omitted() {
+    match setup() {
+        Ok(tests_directory) => {
+            let test_run_directory: PathBuf =
+                [tests_directory.display().to_string().as_str(), "test_run"]
+                    .iter()
+                    .collect();
+            let file_extensions: Vec<String> = Vec::new();
+            let search: String = "positive".to_string();
+            let replace: String = "negative".to_string();
+            let dry_run: bool = false;
+            process_directory(
+                test_run_directory.as_path(),
+                &file_extensions,
+                search.as_str(),
+                replace.as_str(),
+                &dry_run,
+            );
+            assert_eq!(TOTAL_FILES_TO_BE_EDITED.load(Ordering::Relaxed), 9);
+            assert_eq!(TOTAL_FILES_EDITED_OK.load(Ordering::Relaxed), 9);
+            assert_results(
+                "expected-21.json",
+                "actual-2.json",
+                tests_directory.as_path(),
+            );
+            assert_results("expected-31.js", "actual-3.js", tests_directory.as_path());
+            assert_results("expected-1.txt", "actual-1.txt", tests_directory.as_path());
         }
         Err(error) => eprintln!("{}", error),
     }
