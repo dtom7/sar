@@ -133,7 +133,7 @@ fn it_wont_replace_text_when_search_text_is_not_found() {
             let file_extensions: Vec<String> = vec!["json".to_string(), "js".to_string()];
             let search: String = "google".to_string();
             let replace: String = "".to_string();
-            let dry_run: bool = true;
+            let dry_run: bool = false;
             process_directory(
                 test_run_directory.as_path(),
                 &file_extensions,
