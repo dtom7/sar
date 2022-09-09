@@ -1,12 +1,10 @@
-use crate::core::{
+use clap::{ArgAction, Parser};
+use dialoguer::Confirm;
+use sar::core::{
     process_directory, validate_file_extensions, TOTAL_DIR_READ_ERROR, TOTAL_FILES_EDITED_OK,
     TOTAL_FILES_PROCESS_ERROR, TOTAL_FILES_TO_BE_EDITED,
 };
-use clap::{ArgAction, Parser};
-use dialoguer::Confirm;
 use std::{path::PathBuf, sync::atomic::Ordering};
-
-mod core;
 
 #[derive(Parser, Default, Debug)]
 #[clap(version, about)]

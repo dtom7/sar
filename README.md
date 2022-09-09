@@ -1,4 +1,4 @@
-## A simple search and replace (sar) tool for UTF-8 encoded text files
+# A simple text search and replace (sar) tool for UTF-8 encoded text files
 
 
     USAGE:
@@ -19,3 +19,13 @@
                                        extensions will be included. Usage: -x txt (single file
                                        extension) or -x json -x txt (multiple file extensions) or -x
                                        json txt (multiple file extensions)
+
+### Notes
+
+Integration tests must be run only sequentially
+
+    cargo test --package sar --test integration_test -- --test-threads 1
+
+To see println! & eprintln! messages, run with `nocapture`
+
+    cargo test --package sar --test integration_test -- --test-threads 1 --nocapture
