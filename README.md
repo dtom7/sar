@@ -22,10 +22,14 @@
 
 ### Notes
 
-Integration tests must be run only sequentially
+Minimun Rust version to build this package is 1.63.0
+
+This tool has been tested in Windows 10/11 64-bit platform only
+
+Integration tests must be run sequentially, parallel run is not supported
 
     cargo test --package sar --test integration_test -- --test-threads 1
 
-To see println! & eprintln! messages, run with `nocapture`
+To see println! & eprintln! messages whie running integration tests, run with `nocapture` option
 
     cargo test --package sar --test integration_test -- --test-threads 1 --nocapture
