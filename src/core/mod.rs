@@ -2,7 +2,7 @@ use std::fs::{remove_file, File};
 use std::io::{BufRead, BufReader, LineWriter, Result, Write};
 use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use walkdir::WalkDir;
+use walkdir::{DirEntry, WalkDir};
 
 pub static TOTAL_FILES_TO_BE_EDITED: AtomicUsize = AtomicUsize::new(0);
 pub static TOTAL_FILES_EDITED_OK: AtomicUsize = AtomicUsize::new(0);
@@ -12,11 +12,14 @@ pub static TOTAL_DIR_READ_ERROR: AtomicUsize = AtomicUsize::new(0);
 pub fn process_directory(
     directory: &Path,
     file_extensions: &Vec<String>,
+    ignored_dirs: &Vec<String>,
     search: &str,
     replace: &str,
     dry_run: &bool,
 ) {
-    let walker = WalkDir::new(directory).into_iter();
+    let walker = WalkDir::new(directory)
+        .into_iter()
+        .filter_entry(|e| !is_directory_ignored(e, ignored_dirs));
     for entry in walker {
         match entry {
             Ok(entry) => {
@@ -42,6 +45,24 @@ pub fn process_directory(
             }
         }
     }
+}
+
+fn is_directory_ignored(entry: &DirEntry, ignored_dirs: &Vec<String>) -> bool {
+    entry.file_type().is_dir()
+        && entry
+            .file_name()
+            .to_str()
+            .map(|s| matching_ignored(s, ignored_dirs))
+            .unwrap_or(false)
+}
+
+fn matching_ignored(dir: &str, ignored_dirs: &Vec<String>) -> bool {
+    for ignored_dir in ignored_dirs {
+        if dir.eq(ignored_dir) {
+            return true;
+        }
+    }
+    false
 }
 
 fn is_matching_file(entry: Option<&str>, file_extensions: &Vec<String>) -> bool {
@@ -124,7 +145,9 @@ pub fn validate_file_extensions(file_extensions: &Vec<String>) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{is_matching_file, search_and_replace, validate_file_extensions};
+    use crate::core::{
+        is_matching_file, matching_ignored, search_and_replace, validate_file_extensions,
+    };
     #[test]
     fn search_and_replace_positive() {
         let mut found_and_replaced: bool = false;
@@ -184,5 +207,19 @@ mod tests {
         let file_extensions: Vec<String> = vec!["txt".to_string(), ".json".to_string()];
         let validate_file_extensions = validate_file_extensions(&file_extensions);
         assert_eq!(validate_file_extensions, false);
+    }
+    #[test]
+    fn test_matching_ignored_false() {
+        let ignored_dirs: Vec<String> = vec!["node_modules".to_string(), "target".to_string()];
+        let dir: &str = "src";
+        let is_matching_ignored = matching_ignored(dir, &ignored_dirs);
+        assert_eq!(is_matching_ignored, false);
+    }
+    #[test]
+    fn test_matching_ignored_true() {
+        let ignored_dirs: Vec<String> = vec!["node_modules".to_string(), "target".to_string()];
+        let dir: &str = "node_modules";
+        let is_matching_ignored = matching_ignored(dir, &ignored_dirs);
+        assert_eq!(is_matching_ignored, true);
     }
 }

@@ -15,6 +15,9 @@ struct Arguments {
     #[clap(multiple = true, short = 'x')]
     /// File extension(s) to include in the search. If omitted, all file extensions will be included. Usage: -x txt (single file extension) or -x json -x txt (multiple file extensions) or -x json txt (multiple file extensions)
     file_extensions: Vec<String>,
+    #[clap(multiple = true, short = 'i')]
+    /// Sub directory(s) to ignore in the search. Usage: -i node_modules (single directory) or -i node_modules -i target (multiple directories) or -i node_modules target (multiple directories)
+    ignored_dirs: Vec<String>,
     #[clap(forbid_empty_values = true, short)]
     /// Text to search in files, cannot be a blank ("") value. Usage: -s test
     search: String,
@@ -31,6 +34,7 @@ fn main() {
     let args: Arguments = Arguments::parse();
     let directory: PathBuf = args.directory.unwrap_or_else(|| PathBuf::from("."));
     let file_extensions: Vec<String> = args.file_extensions;
+    let ignored_dirs: Vec<String> = args.ignored_dirs;
     if !validate_file_extensions(&file_extensions) {
         println!("{}", separator);
         eprintln!("File extensions cannot contain '*' and cannot start with '.'");
@@ -40,8 +44,8 @@ fn main() {
     let search: String = args.search;
     let replace: String = args.replace.unwrap_or_else(|| String::from(""));
     let dry_run: bool = args.dry_run.unwrap_or_else(|| false);
-    let message: String = format!("In directory: \"{}\", for file extension(s): {:?}, search for: \"{}\" and replace with: \"{}\" and dry-run: {}",
-    directory.display(), file_extensions, search, replace, dry_run);
+    let message: String = format!("In directory: \"{}\", ignoring sub directory(s): {:?}, for file extension(s): {:?}, search for: \"{}\" and replace with: \"{}\" and dry-run: {}",
+    directory.display(), ignored_dirs, file_extensions, search, replace, dry_run);
     let count: usize = message.chars().count();
     println!("{}", "=".repeat(count));
     println!("{}", message);
@@ -56,6 +60,7 @@ fn main() {
         process_directory(
             directory.as_path(),
             &file_extensions,
+            &ignored_dirs,
             search.as_str(),
             replace.as_str(),
             &dry_run,
