@@ -10,6 +10,9 @@
             --dry                      Dry run option. No files will be modified. Just displays the
                                        files containing the search text. Usage: --dry
         -h, --help                     Print help information
+        -i <IGNORED_DIRS>...           Sub directory(s) to ignore in the search. Usage: -i node_modules
+                                       (single directory) or -i node_modules -i target (multiple
+                                       directories) or -i node_modules target (multiple directories)
         -r <REPLACE>                   Text to replace in files. If omitted, blank ("") value will be
                                        taken. Usage: -r test
         -s <SEARCH>                    Text to search in files, cannot be a blank ("") value. Usage: -s
