@@ -52,17 +52,8 @@ fn is_directory_ignored(entry: &DirEntry, ignored_dirs: &Vec<String>) -> bool {
         && entry
             .file_name()
             .to_str()
-            .map(|s| matching_ignored(s, ignored_dirs))
+            .map(|s| ignored_dirs.iter().any(|x| s.eq(x)))
             .unwrap_or(false)
-}
-
-fn matching_ignored(dir: &str, ignored_dirs: &Vec<String>) -> bool {
-    for ignored_dir in ignored_dirs {
-        if dir.eq(ignored_dir) {
-            return true;
-        }
-    }
-    false
 }
 
 fn is_matching_file(entry: Option<&str>, file_extensions: &Vec<String>) -> bool {
@@ -145,9 +136,7 @@ pub fn validate_file_extensions(file_extensions: &Vec<String>) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{
-        is_matching_file, matching_ignored, search_and_replace, validate_file_extensions,
-    };
+    use crate::core::{is_matching_file, search_and_replace, validate_file_extensions};
     #[test]
     fn search_and_replace_positive() {
         let mut found_and_replaced: bool = false;
@@ -207,19 +196,5 @@ mod tests {
         let file_extensions: Vec<String> = vec!["txt".to_string(), ".json".to_string()];
         let validate_file_extensions = validate_file_extensions(&file_extensions);
         assert_eq!(validate_file_extensions, false);
-    }
-    #[test]
-    fn test_matching_ignored_false() {
-        let ignored_dirs: Vec<String> = vec!["node_modules".to_string(), "target".to_string()];
-        let dir: &str = "src";
-        let is_matching_ignored = matching_ignored(dir, &ignored_dirs);
-        assert_eq!(is_matching_ignored, false);
-    }
-    #[test]
-    fn test_matching_ignored_true() {
-        let ignored_dirs: Vec<String> = vec!["node_modules".to_string(), "target".to_string()];
-        let dir: &str = "node_modules";
-        let is_matching_ignored = matching_ignored(dir, &ignored_dirs);
-        assert_eq!(is_matching_ignored, true);
     }
 }
