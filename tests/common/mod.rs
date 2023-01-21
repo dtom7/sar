@@ -30,6 +30,7 @@ pub fn setup() -> Result<PathBuf> {
             .iter(),
         )?;
         copy_files("original-1.txt", "actual-1.txt")?;
+        copy_files("original-2.txt", "actual-2.txt")?;
         copy_files("original-2.json", "actual-2.json")?;
         copy_files("original-3.js", "actual-3.js")?;
         Ok(current_dir)

@@ -1,3 +1,5 @@
+use regex::Regex;
+use std::borrow::Cow;
 use std::fs::{remove_file, File};
 use std::io::{BufRead, BufReader, LineWriter, Result, Write};
 use std::path::Path;
@@ -17,6 +19,7 @@ pub fn process_directory(
     replace: &str,
     dry_run: &bool,
 ) {
+    let regex: Regex = Regex::new(search).unwrap();
     let walker = WalkDir::new(directory)
         .into_iter()
         .filter_entry(|e| !is_directory_ignored(e, ignored_dirs));
@@ -26,7 +29,7 @@ pub fn process_directory(
                 if entry.file_type().is_file()
                     && is_matching_file(entry.file_name().to_str(), file_extensions)
                 {
-                    match process_file(&entry.path(), search, replace, dry_run) {
+                    match process_file(&entry.path(), &regex, replace, dry_run) {
                         Ok(()) => (),
                         Err(error) => {
                             eprintln!(
@@ -73,7 +76,7 @@ fn is_matching_file(entry: Option<&str>, file_extensions: &Vec<String>) -> bool 
         .unwrap_or(false)
 }
 
-fn process_file(file_path: &Path, search: &str, replace: &str, dry_run: &bool) -> Result<()> {
+fn process_file(file_path: &Path, regex: &Regex, replace: &str, dry_run: &bool) -> Result<()> {
     let mut lines: Vec<String> = Vec::new();
     let mut found_and_replaced: bool = false;
     let file: File = File::open(file_path)?;
@@ -84,8 +87,9 @@ fn process_file(file_path: &Path, search: &str, replace: &str, dry_run: &bool) -
         if len == 0 {
             break;
         } else {
-            let line: String = search_and_replace(line, search, replace, &mut found_and_replaced);
-            lines.push(line);
+            let result: Cow<str> =
+                search_and_replace(&line, regex, replace, &mut found_and_replaced);
+            lines.push(result.to_string());
         }
     }
     if found_and_replaced {
@@ -101,18 +105,17 @@ fn process_file(file_path: &Path, search: &str, replace: &str, dry_run: &bool) -
     Ok(())
 }
 
-fn search_and_replace(
-    line: String,
-    search: &str,
+fn search_and_replace<'a>(
+    line: &'a String,
+    regex: &Regex,
     replace: &str,
     found_and_replaced: &mut bool,
-) -> String {
-    if line.contains(search) {
+) -> Cow<'a, str> {
+    if regex.is_match(line.as_str()) {
         *found_and_replaced = true;
-        return line.replace(search, replace);
-    } else {
-        return line;
+        return regex.replace_all(line.as_str(), replace);
     }
+    return Cow::from(line);
 }
 
 fn write_file(lines: Vec<String>, path: &Path) -> Result<()> {
@@ -137,15 +140,18 @@ pub fn validate_file_extensions(file_extensions: &Vec<String>) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::core::{is_matching_file, search_and_replace, validate_file_extensions};
+    use regex::Regex;
+    use std::borrow::Cow;
     #[test]
     fn search_and_replace_positive() {
         let mut found_and_replaced: bool = false;
         let original_text =
             "import { BrowserModule } @igniteui/ from \"@igniteui/platform-browser\";".to_string();
         let expected_text = "import { BrowserModule }  from \"platform-browser\";".to_string();
-        let actual_text =
-            search_and_replace(original_text, "@igniteui/", "", &mut found_and_replaced);
-        assert_eq!(actual_text, expected_text);
+        let regex: Regex = Regex::new("@igniteui/").unwrap();
+        let result: Cow<str> =
+            search_and_replace(&original_text, &regex, "", &mut found_and_replaced);
+        assert_eq!(result, expected_text);
         assert_eq!(found_and_replaced, true);
     }
     #[test]
@@ -153,11 +159,53 @@ mod tests {
         let mut found_and_replaced: bool = false;
         let original_text = "import { BrowserModule } from \"platform-browser\";".to_string();
         let expected_text = "import { BrowserModule } from \"platform-browser\";".to_string();
-        let actual_text =
-            search_and_replace(original_text, "@igniteui/", "", &mut found_and_replaced);
-        assert_eq!(actual_text, expected_text);
+        let regex: Regex = Regex::new("@igniteui/").unwrap();
+        let result: Cow<str> =
+            search_and_replace(&original_text, &regex, "", &mut found_and_replaced);
+        assert_eq!(result, expected_text);
         assert_eq!(found_and_replaced, false);
     }
+
+    #[test]
+    fn search_and_replace_regex_positive_1() {
+        let mut found_and_replaced: bool = false;
+        let original_text = r"2012-03-14, 2013-01-01 and 2014-07-05".to_string();
+        let expected_text = r"03/14/2012, 01/01/2013 and 07/05/2014".to_string();
+        let regex: Regex = Regex::new(r"(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})").unwrap();
+        let result: Cow<str> =
+            search_and_replace(&original_text, &regex, "$m/$d/$y", &mut found_and_replaced);
+        assert_eq!(result, expected_text);
+        assert_eq!(found_and_replaced, true);
+    }
+
+    #[test]
+    fn search_and_replace_regex_positive_2() {
+        let mut found_and_replaced: bool = false;
+        let original_text = r"www.xyz.123".to_string();
+        let expected_text = r"www.xyz.com".to_string();
+        let regex: Regex = Regex::new(r"(?P<a>[a-z]{3})\.(?P<b>[a-z]{3})\.(?P<c>\d{3})").unwrap();
+        let result: Cow<str> = search_and_replace(
+            &original_text,
+            &regex,
+            r"$a.$b.com",
+            &mut found_and_replaced,
+        );
+        assert_eq!(result, expected_text);
+        assert_eq!(found_and_replaced, true);
+    }
+
+    #[test]
+    fn search_and_replace_regex_negative() {
+        let mut found_and_replaced: bool = false;
+        let original_text = r"03/14/2012, 01/01/2013 and 07/05/2014".to_string();
+        let expected_text = r"03/14/2012, 01/01/2013 and 07/05/2014".to_string();
+        let regex: Regex = Regex::new(r"(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})").unwrap();
+        let result: Cow<str> =
+            search_and_replace(&original_text, &regex, "$m/$d/$y", &mut found_and_replaced);
+        assert_eq!(result, expected_text);
+        assert_eq!(found_and_replaced, false);
+    }
+
     #[test]
     fn is_matching_file_positive() {
         let file_extensions: Vec<String> = vec!["txt".to_string(), "json".to_string()];

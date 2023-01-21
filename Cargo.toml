@@ -10,3 +10,5 @@ author = "Dony Thomas <dony.thomas7@gmail.com>"
 walkdir = "2"
 clap = { version = "3", features = ["derive"] }
 dialoguer = "0"
+regex = "1"
+lazy_static = "1"
