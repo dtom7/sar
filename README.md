@@ -25,14 +25,8 @@
 
 ### Notes
 
-Minimun Rust version to build this package is 1.63.0
+Minimun Rust version to build this package is `1.63.0`
 
-This tool has been tested in Windows 10/11 64-bit platform only
+This tool has been tested in `Windows 10/11 64-bit` platform only
 
-Integration tests must be run sequentially, parallel run is not supported
-
-    cargo test --package sar --test integration_test -- --test-threads 1
-
-To see println! & eprintln! messages whie running integration tests, run with `nocapture` option
-
-    cargo test --package sar --test integration_test -- --test-threads 1 --nocapture
+Guidelines on integration tests are in `tests/README.md` 
