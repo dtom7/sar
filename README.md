@@ -14,9 +14,9 @@
                                        (single directory) or -i node_modules -i target (multiple
                                        directories) or -i node_modules target (multiple directories)
         -r <REPLACE>                   Text to replace in files. If omitted, blank ("") value will be
-                                       taken. Usage: -r test
-        -s <SEARCH>                    Text to search in files, cannot be a blank ("") value. Usage: -s
-                                       test
+                                       taken. Supports regex. Usage: -r test
+        -s <SEARCH>                    Text to search in files, cannot be a blank ("") value. Supports regex. 
+                                       Usage: -s test
         -V, --version                  Print version information
         -x <FILE_EXTENSIONS>...        File extension(s) to include in the search. If omitted, all file
                                        extensions will be included. Usage: -x txt (single file
