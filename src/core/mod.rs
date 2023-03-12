@@ -89,7 +89,10 @@ fn process_file(file_path: &Path, regex: &Regex, replace: &str, dry_run: &bool) 
         } else {
             let result: Cow<str> =
                 search_and_replace(&line, regex, replace, &mut found_and_replaced);
-            lines.push(result.to_string());
+            match result {
+                Cow::Borrowed(_) => lines.push(line), // regex not matching, no replacement
+                Cow::Owned(val) => lines.push(val.to_owned()), // regex matching, replaced
+            }
         }
     }
     if found_and_replaced {
@@ -106,14 +109,14 @@ fn process_file(file_path: &Path, regex: &Regex, replace: &str, dry_run: &bool) 
 }
 
 fn search_and_replace<'a>(
-    line: &'a String,
+    line: &'a str,
     regex: &Regex,
     replace: &str,
     found_and_replaced: &mut bool,
 ) -> Cow<'a, str> {
-    if regex.is_match(line.as_str()) {
+    if regex.is_match(line) {
         *found_and_replaced = true;
-        return regex.replace_all(line.as_str(), replace);
+        return regex.replace_all(line, replace);
     }
     return Cow::from(line);
 }

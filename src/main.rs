@@ -19,10 +19,10 @@ struct Arguments {
     /// Sub directory(s) to ignore in the search. Usage: -i node_modules (single directory) or -i node_modules -i target (multiple directories) or -i node_modules target (multiple directories)
     ignored_dirs: Vec<String>,
     #[clap(forbid_empty_values = true, short)]
-    /// Text to search in files, cannot be a blank ("") value. Usage: -s test
+    /// Text to search in files, cannot be a blank ("") value. Supports regex. Usage: -s test
     search: String,
     #[clap(short)]
-    /// Text to replace in files. If omitted, blank ("") value will be taken. Usage: -r test
+    /// Text to replace in files. If omitted, blank ("") value will be taken. Supports regex. Usage: -r test
     replace: Option<String>,
     #[clap(long = "dry", action = ArgAction::SetTrue)]
     /// Dry run option. No files will be modified. Just displays the files containing the search text. Usage: --dry
