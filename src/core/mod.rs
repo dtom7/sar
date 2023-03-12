@@ -87,7 +87,7 @@ fn process_file(file_path: &Path, regex: &Regex, replace: &str, dry_run: &bool) 
         if len == 0 {
             break;
         } else {
-            let result: Cow<str> =
+            let result: Cow<'_, str> =
                 search_and_replace(&line, regex, replace, &mut found_and_replaced);
             match result {
                 Cow::Borrowed(_) => lines.push(line), // regex not matching, no replacement
