@@ -20,11 +20,10 @@ pub fn process_directory(
     dry_run: &bool,
 ) {
     let regex: Regex = Regex::new(search).unwrap();
-    let walker = WalkDir::new(directory)
+    WalkDir::new(directory)
         .into_iter()
-        .filter_entry(|e| !is_directory_ignored(e, ignored_dirs));
-    for entry in walker {
-        match entry {
+        .filter_entry(|e| !is_directory_ignored(e, ignored_dirs))
+        .for_each(|entry| match entry {
             Ok(entry) => {
                 if entry.file_type().is_file()
                     && is_matching_file(entry.file_name().to_str(), file_extensions)
@@ -46,8 +45,7 @@ pub fn process_directory(
                 eprintln!("Error: {}", error);
                 TOTAL_DIR_READ_ERROR.fetch_add(1, Ordering::Relaxed);
             }
-        }
-    }
+        });
 }
 
 fn is_directory_ignored(entry: &DirEntry, ignored_dirs: &Vec<String>) -> bool {
