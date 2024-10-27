@@ -24,9 +24,10 @@
                                        json txt (multiple file extensions)
 
 ### Notes
-
 Minimun Rust version to build this package is `1.63.0`
 
 This tool has been tested in `Windows 10/11 64-bit` platform only
 
 Guidelines on integration tests are in `tests/README.md` 
+
+Make sure to use `--release` flag while building
